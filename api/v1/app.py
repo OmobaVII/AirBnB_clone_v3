@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """my api application"""
-from flask import Flask
+from flask import Flask, make_response, jsonify
 from os import getenv
 from models import storage
 from api.v1.views import app_views
@@ -13,6 +13,12 @@ app.register_blueprint(app_views)
 def close_storage(self):
     """closes the storage for the session"""
     storage.close()
+
+
+@app.errorhandler(404)
+def error_404(error):
+    """handlers for 404 errors"""
+    return make_response(jsonify({"error": "Not found"}))
 
 
 if __name__ == '__main__':
