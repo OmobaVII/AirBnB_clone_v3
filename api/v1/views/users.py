@@ -69,7 +69,7 @@ def update_user(user_id):
             if keys in keys_ignore:
                 pass
             else:
-                setattr(a_user, key, data[key])
+                setattr(a_user, keys, data[keys])
         a_user.save()
 
         return jsonify(a_user.to_dict()), 200
