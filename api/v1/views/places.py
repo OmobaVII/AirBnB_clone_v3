@@ -59,7 +59,7 @@ def post_place(city_id):
         data = request.get_json()
         a_user = storage.get(User, data['user_id'])
         a_city = storage.get(City, city_id)
-        if a_city is None:
+        if a_city is None or a_user is None:
             abort(404)
         data['city_id'] = a_city.id
         data['user_id'] = a_user.id
@@ -80,7 +80,9 @@ def update_place(place_id):
         data = request.get_json()
         keys_ignore = ("id", "user_id", "created_at", "updated_at")
         for key, val in data.items():
-            if key not in keys_ignore:
+            if key in keys_ignore:
+                pass
+            else:
                 setattr(a_place, key, val)
         a_place.save()
 
