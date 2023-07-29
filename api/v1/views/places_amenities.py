@@ -60,7 +60,7 @@ def post_amenity_to_place(place_id, amenity_id):
         else:
             a_place.amenities.append(an_amenity)
     else:
-        if amenity_id in place.amenity_ids:
+        if amenity_id in a_place.amenity_ids:
             return jsonify(an_amenity.to_dict()), 200
         else:
             a_place.amenity_ids.append(amenity_id)
