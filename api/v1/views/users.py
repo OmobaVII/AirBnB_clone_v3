@@ -64,7 +64,12 @@ def update_user(user_id):
         return jsonify({"error": "Not a JSON"}), 400
     else:
         data = request.get_json()
-        a_user.name = data['name']
+        keys_ignore = ("id", "email", "created_at", "updated_at")
+        for keys in data.keys():
+            if keys in keys_ignore:
+                pass
+            else:
+                setattr(a_user, key, data[key])
         a_user.save()
 
         return jsonify(a_user.to_dict()), 200
