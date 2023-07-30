@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 """new view for place objects that handles
 default RESTful API actions"""
+from models.state import State
 from models.place import Place
 from models.city import City
-from models.state import State
+from models.user import User
 from models.amenity import Amenity
 from api.v1.views import app_views
 from flask import Flask, jsonify, abort, request
@@ -25,7 +26,7 @@ def get_place(city_id):
 
 @app_views.route('/places/<place_id>', methods=['GET'], strict_slashes=False)
 def get_placeid(place_id):
-    """return a place corresponding to the id"""
+    """return a place corresponding the id"""
     a_place = storage.get(Place, place_id)
     if a_place is None:
         abort(404)
@@ -36,7 +37,7 @@ def get_placeid(place_id):
 @app_views.route('/places/<place_id>', methods=['DELETE'],
                  strict_slashes=False)
 def delete_place(place_id):
-    """deletes a place corresponding to the id"""
+    """deletes a place corresponding the id"""
     a_place = storage.get(Place, place_id)
     if a_place is None:
         abort(404)
@@ -91,37 +92,62 @@ def update_place(place_id):
 
 
 @app_views.route('/places_search', methods=['POST'], strict_slashes=False)
-def search_places():
-    """searches for places based on the provided JSON"""
-    if not request.get_json():
-        return jsonify({"error": "Not a JSON"}), 400
+def places_search():
+    """
+    Retrieves all Place objects depending of the JSON in the body
+    of the request
+    """
+
+    if request.get_json() is None:
+        abort(400, description="Not a JSON")
 
     data = request.get_json()
-    states = data.get('states', [])
-    cities = data.get('cities', [])
-    amenities = data.get('amenities', [])
 
-    place_list = []
+    if data and len(data):
+        states = data.get('states', None)
+        cities = data.get('cities', None)
+        amenities = data.get('amenities', None)
 
-    if not states and not cities:
+    if not data or not len(data) or (
+            not states and
+            not cities and
+            not amenities):
         places = storage.all(Place).values()
-        place_list.extend(places)
-    else:
-        for state_id in states:
-            state = storage.get(State, state_id)
-            if state:
-                place_list.extend(state.places)
+        list_places = []
+        for place in places:
+            list_places.append(place.to_dict())
+        return jsonify(list_places)
 
-        for city_id in cities:
-            city = storage.get(City, city_id)
-            if city and city not in place_list:
-                place_list.extend(city.places)
+    list_places = []
+    if states:
+        states_obj = [storage.get(State, s_id) for s_id in states]
+        for state in states_obj:
+            if state:
+                for city in state.cities:
+                    if city:
+                        for place in city.places:
+                            list_places.append(place)
+
+    if cities:
+        city_obj = [storage.get(City, c_id) for c_id in cities]
+        for city in city_obj:
+            if city:
+                for place in city.places:
+                    if place not in list_places:
+                        list_places.append(place)
 
     if amenities:
-        amenity_objs = [storage.get(Amenity, amenity_id) for amenity_id in amenities]
-        amenity_ids = {amenity.id for amenity in amenity_objs if amenity}
-        place_list = [place for place in place_list if amenity_ids.issubset(place.amenity_ids)]
+        if not list_places:
+            list_places = storage.all(Place).values()
+        amenities_obj = [storage.get(Amenity, a_id) for a_id in amenities]
+        list_places = [place for place in list_places
+                       if all([am in place.amenities
+                               for am in amenities_obj])]
 
-    result = [place.to_dict() for place in place_list]
+    places = []
+    for p in list_places:
+        d = p.to_dict()
+        d.pop('amenities', None)
+        places.append(d)
 
-    return jsonify(result), 200
+    return jsonify(places)
