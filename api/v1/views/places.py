@@ -4,6 +4,7 @@ default RESTful API actions"""
 from models.place import Place
 from models.city import City
 from models.user import User
+from models.amenity import Amenity
 from api.v1.views import app_views
 from flask import Flask, jsonify, abort, request
 from models import storage
