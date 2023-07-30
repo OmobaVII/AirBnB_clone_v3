@@ -3,14 +3,11 @@
 default RESTful API actions"""
 from models.place import Place
 from models.city import City
-from models.user import User
-from models.amenity import Amenity
 from models.state import State
+from models.amenity import Amenity
 from api.v1.views import app_views
 from flask import Flask, jsonify, abort, request
 from models import storage
-from flasgger.utils import swag_from
-from api.v1.views import app_views
 
 
 @app_views.route('/cities/<city_id>/places', methods=['GET'],
@@ -28,7 +25,7 @@ def get_place(city_id):
 
 @app_views.route('/places/<place_id>', methods=['GET'], strict_slashes=False)
 def get_placeid(place_id):
-    """return a place corresponding the id"""
+    """return a place corresponding to the id"""
     a_place = storage.get(Place, place_id)
     if a_place is None:
         abort(404)
@@ -39,7 +36,7 @@ def get_placeid(place_id):
 @app_views.route('/places/<place_id>', methods=['DELETE'],
                  strict_slashes=False)
 def delete_place(place_id):
-    """deletes a place corresponding the id"""
+    """deletes a place corresponding to the id"""
     a_place = storage.get(Place, place_id)
     if a_place is None:
         abort(404)
@@ -92,13 +89,10 @@ def update_place(place_id):
 
         return jsonify(a_place.to_dict()), 200
 
-@app_views.route('/places_search', methods=['POST'], strict_slashes=False)
-def places_search():
-    """
-    Retrieves all Place objects depending of the JSON in the body
-    of the request
-    """
 
+@app_views.route('/places_search', methods=['POST'], strict_slashes=False)
+def search_places():
+    """searches for places based on the provided JSON"""
     if not request.get_json():
         return jsonify({"error": "Not a JSON"}), 400
 
